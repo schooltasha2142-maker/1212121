@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UltraCalc Pro - Потужний Калькулятор</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2e;
+            --bg-tertiary: #16213e;
+            --accent-cyan: #00d4ff;
+            --accent-purple: #9d4edd;
+            --accent-pink: #ff006e;
+            --accent-green: #00f5d4;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        /* Анімований фон */
+        .bg-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(ellipse at 20% 80%, rgba(157, 78, 221, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(0, 212, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(255, 0, 110, 0.1) 0%, transparent 50%);
+            animation: bgPulse 10s ease-in-out infinite;
+        }
+
+        @keyframes bgPulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+
+        /* Плаваючі частинки */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--accent-cyan);
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: float 20s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 0.5; }
+            90% { opacity: 0.5; }
+            100% { transform: translateY(-100vh) rotate(720deg); opacity: 0; }
+        }
+
+        /* Навігація */
+        nav {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            -webkit-text-fill-color: white;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: -1;
+        }
+
+        .nav-tab:hover, .nav-tab.active {
+            color: var(--text-primary);
+            transform: translateY(-2px);
+        }
+
+        .nav-tab.active::before {
+            opacity: 0.2;
+        }
+
+        .nav-tab.active {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        /* Основний контейнер */
+        .main-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+        }
+
+        /* Калькулятор */
+        .calculator-wrapper {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .display {
+            background: var(--bg-secondary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--glass-border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent-cyan), transparent);
+            animation: scanline 3s linear infinite;
+        }
+
+        @keyframes scanline {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .history-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: right;
+            min-height: 1.5rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.7;
+        }
+
+        .main-display {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 3rem;
+            font-weight: 700;
+            text-align: right;
+            color: var(--text-primary);
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            text-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+        }
+
+        /* Кнопки */
+        .buttons-grid {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .buttons-grid.standard {
+            grid-template-columns: repeat(4, 1fr);
+        }
+
+        .buttons-grid.scientific {
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .btn {
+            padding: 1.25rem;
+            border: none;
+            border-radius: 16px;
+            font-family: inherit;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+
+        .btn:active::after {
+            width: 200px;
+            height: 200px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-number {
+            background: var(--bg-secondary);
+        }
+
+        .btn-operator {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(157, 78, 221, 0.2));
+            color: var(--accent-cyan);
+        }
+
+        .btn-function {
+            background: rgba(255, 0, 110, 0.1);
+            color: var(--accent-pink);
+            font-size: 0.9rem;
+        }
+
+        .btn-equals {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            color: white;
+            grid-column: span 2;
+        }
+
+        .btn-clear {
+            background: rgba(255, 0, 110, 0.2);
+            color: var(--accent-pink);
+        }
+
+        .btn-zero {
+            grid-column: span 2;
+        }
+
+        /* Бічна панель */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 1.5rem;
+        }
+
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--accent-cyan);
+        }
+
+        /* Історія */
+        .history-list {
+            max-height: 300px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .history-item {
+            background: var(--bg-secondary);
+            padding: 0.75rem;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+        }
+
+        .history-item:hover {
+            background: var(--bg-tertiary);
+            transform: translateX(5px);
+            border-left: 3px solid var(--accent-cyan);
+        }
+
+        .history-expr {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .history-result {
+            color: var(--accent-green);
+            font-weight: 700;
+        }
+
+        /* Конвертер валют */
+        .currency-converter {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .currency-row {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .currency-input {
+            flex: 1;
+            background: var(--bg-secondary);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+        }
+
+        .currency-select {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 0.75rem;
+            color: var(--text-primary);
+            cursor: pointer;
+            min-width: 80px;
+        }
+
+        .swap-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--glass-border);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--accent-cyan);
+            transition: transform 0.3s;
+        }
+
+        .swap-btn:hover {
+            transform: rotate(180deg);
+        }
+
+        /* Теми */
+        .themes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.5rem;
+        }
+
+        .theme-btn {
+            height: 40px;
+            border-radius: 10px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .theme-btn:hover, .theme-btn.active {
+            border-color: var(--text-primary);
+            transform: scale(1.1);
+        }
+
+        .theme-cyber {
+            background: linear-gradient(135deg, #0f0f23, #1a1a2e);
+        }
+
+        .theme-sunset {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+        }
+
+        .theme-forest {
+            background: linear-gradient(135deg, #1dd1a1, #10ac84);
+        }
+
+        .theme-ocean {
+            background: linear-gradient(135deg, #48dbfb, #0abde3);
+        }
+
+        .theme-midnight {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+        }
+
+        .theme-candy {
+            background: linear-gradient(135deg, #ff9ff3, #f368e0);
+        }
+
+        /* Анімація перемикання */
+        .calc-section {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .calc-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Програмістський режим */
+        .programmer-display {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .base-display {
+            background: var(--bg-secondary);
+            padding: 0.5rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .base-label {
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+        }
+
+        .base-value {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+
+        /* Адаптивність */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                order: 2;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .nav-tabs {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .main-display {
+                font-size: 2rem;
+            }
+            .btn {
+                padding: 1rem;
+                font-size: 1rem;
+            }
+        }
+
+        /* Спецефекти */
+        .glow-text {
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px var(--accent-cyan), 0 0 20px var(--accent-cyan); }
+            to { text-shadow: 0 0 20px var(--accent-purple), 0 0 30px var(--accent-purple); }
+        }
+
+        /* Скроллбар */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent-cyan);
+            border-radius: 4px;
+        }
+
+        /* Графік (canvas) */
+        .graph-container {
+            width: 100%;
+            height: 200px;
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            margin-top: 1rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #functionGraph {
+            width: 100%;
+            height: 100%;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    <div class="particles" id="particles"></div>
+
+    <nav>
+        <div class="nav-container">
+            <div class="logo">
+                <div class="logo-icon">∑</div>
+                UltraCalc Pro
+            </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="switchMode('standard')">Стандартний</button>
+                <button class="nav-tab" onclick="switchMode('scientific')">Науковий</button>
+                <button class="nav-tab" onclick="switchMode('programmer')">Програміст</button>
+                <button class="nav-tab" onclick="switchMode('currency')">Валюти</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="calculator-wrapper">
+            <!-- Стандартний режим -->
+            <div id="standard" class="calc-section active">
+                <div class="display">
+                    <div class="history-display" id="stdHistory"></div>
+                    <div class="main-display" id="stdDisplay">0</div>
+                </div>
+                <div class="buttons-grid standard">
+                    <button class="btn btn-clear" onclick="clearAll()">AC</button>
+                    <button class="btn btn-function" onclick="deleteLast()">⌫</button>
+                    <button class="btn btn-function" onclick="insertOperator('%')">%</button>
+                    <button class="btn btn-operator" onclick="insertOperator('/')">÷</button>
+                    
+                    <button class="btn btn-number" onclick="insertNumber('7')">7</button>
+                    <button class="btn btn-number" onclick="insertNumber('8')">8</button>
+                    <button class="btn btn-number" onclick="insertNumber('9')">9</button>
+                    <button class="btn btn-operator" onclick="insertOperator('*')">×</button>
+                    
+                    <button class="btn btn-number" onclick="insertNumber('4')">4</button>
+                    <button class="btn btn-number" onclick="insertNumber('5')">5</button>
+                    <button class="btn btn-number" onclick="insertNumber('6')">6</button>
+                    <button class="btn btn-operator" onclick="insertOperator('-')">−</button>
+                    
+                    <button class="btn btn-number" onclick="insertNumber('1')">1</button>
+                    <button class="btn btn-number" onclick="insertNumber('2')">2</button>
+                    <button class="btn btn-number" onclick="insertNumber('3')">3</button>
+                    <button class="btn btn-operator" onclick="insertOperator('+')">+</button>
+                    
+                    <button class="btn btn-number btn-zero" onclick="insertNumber('0')">0</button>
+                    <button class="btn btn-number" onclick="insertNumber('.')">.</button>
+                    <button class="btn btn-equals" onclick="calculate()">=</button>
+                </div>
+            </div>
+
+            <!-- Науковий режим -->
+            <div id="scientific" class="calc-section">
+                <div class="display">
+                    <div class="history-display" id="sciHistory"></div>
+                    <div class="main-display" id="sciDisplay">0</div>
+                </div>
+                <div class="graph-container">
+                    <canvas id="functionGraph"></canvas>
+                </div>
+                <div class="buttons-grid scientific">
+                    <button class="btn btn-function" onclick="clearAll()">AC</button>
+                    <button class="btn btn-function" onclick="insertFunction('sin')">sin</button>
+                    <button class="btn btn-function" onclick="insertFunction('cos')">cos</button>
+                    <button class="btn btn-function" onclick="insertFunction('tan')">tan</button>
+                    <button class="btn btn-operator" onclick="insertOperator('/')">÷</button>
+                    
+                    <button class="btn btn-function" onclick="insertFunction('log')">log</button>
+                    <button class="btn btn-number" onclick="insertNumber('7')">7</button>
+                    <button class="btn btn-number" onclick="insertNumber('8')">8</button>
+                    <button class="btn btn-number" onclick="insertNumber('9')">9</button>
+                    <button class="btn btn-operator" onclick="insertOperator('*')">×</button>
+                    
+                    <button class="btn btn-function" onclick="insertFunction('ln')">ln</button>
+                    <button class="btn btn-number" onclick="insertNumber('4')">4</button>
+                    <button class="btn btn-number" onclick="insertNumber('5')">5</button>
+                    <button class="btn btn-number" onclick="insertNumber('6')">6</button>
+                    <button class="btn btn-operator" onclick="insertOperator('-')">−</button>
+                    
+                    <button class="btn btn-function" onclick="insertFunction('sqrt')">√</button>
+                    <button class="btn btn-number" onclick="insertNumber('1')">1</button>
+                    <button class="btn btn-number" onclick="insertNumber('2')">2</button>
+                    <button class="btn btn-number" onclick="insertNumber('3')">3</button>
+                    <button class="btn btn-operator" onclick="insertOperator('+')">+</button>
+                    
+                    <button class="btn btn-function" onclick="insertFunction('pow')">x^y</button>
+                    <button class="btn btn-function" onclick="insertNumber('(')">(</button>
+                    <button class="btn btn-number" onclick="insertNumber('0')">0</button>
+                    <button class="btn btn-number" onclick="insertNumber('.')">.</button>
+                    <button class="btn btn-number" onclick="insertNumber(')')">)</button>
+                    <button class="btn btn-equals" onclick="calculate()" style="grid-column: span 1;">=</button>
+                </div>
+            </div>
+
+            <!-- Програмістський режим -->
+            <div id="programmer" class="calc-section">
+                <div class="display">
+                    <div class="programmer-display">
+                        <div class="base-display">
+                            <div class="base-label">HEX</div>
+                            <div class="base-value" id="hexVal">0</div>
+                        </div>
+                        <div class="base-display">
+                            <div class="base-label">DEC</div>
+                            <div class="base-value" id="decVal">0</div>
+                        </div>
+                        <div class="base-display">
+                            <div class="base-label">OCT</div>
+                            <div class="base-value" id="octVal">0</div>
+                        </div>
+                        <div class="base-display">
+                            <div class="base-label">BIN</div>
+                            <div class="base-value" id="binVal">0</div>
+                        </div>
+                    </div>
+                    <div class="main-display" id="progDisplay">0</div>
+                </div>
+                <div class="buttons-grid standard">
+                    <button class="btn btn-clear" onclick="clearAll()">AC</button>
+                    <button class="btn btn-function" onclick="insertOperator('>>')">>></button>
+                    <button class="btn btn-function" onclick="insertOperator('<<')"><<</button>
+                    <button class="btn btn-operator" onclick="insertOperator('&')">AND</button>
+                    
+                    <button class="btn btn-function" onclick="insertNumber('A')">A</button>
+                    <button class="btn btn-function" onclick="insertNumber('B')">B</button>
+                    <button class="btn btn-function" onclick="insertNumber('C')">C</button>
+                    <button class="btn btn-operator" onclick="insertOperator('|')">OR</button>
+                    
+                    <button class="btn btn-function" onclick="insertNumber('D')">D</button>
+                    <button class="btn btn-function" onclick="insertNumber('E')">E</button>
+                    <button class="btn btn-function" onclick="insertNumber('F')">F</button>
+                    <button class="btn btn-operator" onclick="insertOperator('^')">XOR</button>
+                    
+                    <button class="btn btn-number" onclick="insertNumber('7')">7</button>
+                    <button class="btn btn-number" onclick="insertNumber('8')">8</button>
+                    <button class="btn btn-number" onclick="insertNumber('9')">9</button>
+                    <button class="btn btn-function" onclick="insertOperator('~')">NOT</button>
+                    
+                    <button class="btn btn-number" onclick="insertNumber('4')">4</button>
+                    <button class="btn btn-number" onclick="insertNumber('5')">5</button>
+                    <button class="btn btn-number" onclick="insertNumber('6')">6</button>
+                    <button class="btn btn-function" onclick="insertNumber('(')">(</button>
+                    
+                    <button class="btn btn-number" onclick="insertNumber('1')">1</button>
+                    <button class="btn btn-number" onclick="insertNumber('2')">2</button>
+                    <button class="btn btn-number" onclick="insertNumber('3')">3</button>
+                    <button class="btn btn-number" onclick="insertNumber(')')">)</button>
+                    
+                    <button class="btn btn-number btn-zero" onclick="insertNumber('0')">0</button>
+                    <button class="btn btn-equals" onclick="calculate()">=</button>
+                </div>
+            </div>
+
+            <!-- Конвертер валют -->
+            <div id="currency" class="calc-section">
+                <div class="display">
+                    <div class="main-display" style="font-size: 2rem;">Конвертер Валют</div>
+                </div>
+                <div class="currency-converter">
+                    <div class="currency-row">
+                        <input type="number" class="currency-input" id="fromAmount" value="1" oninput="convertCurrency()">
+                        <select class="currency-select" id="fromCurrency" onchange="convertCurrency()">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="UAH" selected>UAH</option>
+                            <option value="GBP">GBP</option>
+                            <option value="PLN">PLN</option>
+                        </select>
+                    </div>
+                    <div style="text-align: center;">
+                        <button class="swap-btn" onclick="swapCurrency()">⇅</button>
+                    </div>
+                    <div class="currency-row">
+                        <input type="number" class="currency-input" id="toAmount" readonly>
+                        <select class="currency-select" id="toCurrency" onchange="convertCurrency()">
+                            <option value="USD" selected>USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="UAH">UAH</option>
+                            <option value="GBP">GBP</option>
+                            <option value="PLN">PLN</option>
+                        </select>
+                    </div>
+                    <div style="text-align: center; margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+                        Курс оновлено: <span id="rateDate">сьогодні</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Бічна панель -->
+        <div class="sidebar">
+            <!-- Історія -->
+            <div class="panel">
+                <div class="panel-title">
+                    <span>📜</span> Історія обчислень
+                </div>
+                <div class="history-list" id="historyList">
+                    <div style="color: var(--text-secondary); text-align: center; padding: 2rem;">
+                        Історія порожня
+                    </div>
+                </div>
+                <button class="btn btn-clear" onclick="clearHistory()" style="width: 100%; margin-top: 1rem; padding: 0.75rem;">
+                    Очистити історію
+                </button>
+            </div>
+
+            <!-- Теми -->
+            <div class="panel">
+                <div class="panel-title">
+                    <span>🎨</span> Теми оформлення
+                </div>
+                <div class="themes-grid">
+                    <button class="theme-btn theme-cyber active" onclick="setTheme('cyber')" title="Cyberpunk"></button>
+                    <button class="theme-btn theme-sunset" onclick="setTheme('sunset')" title="Sunset"></button>
+                    <button class="theme-btn theme-forest" onclick="setTheme('forest')" title="Forest"></button>
+                    <button class="theme-btn theme-ocean" onclick="setTheme('ocean')" title="Ocean"></button>
+                    <button class="theme-btn theme-midnight" onclick="setTheme('midnight')" title="Midnight"></button>
+                    <button class="theme-btn theme-candy" onclick="setTheme('candy')" title="Candy"></button>
+                </div>
+            </div>
+
+            <!-- Швидкі функції -->
+            <div class="panel">
+                <div class="panel-title">
+                    <span>⚡</span> Швидкі дії
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+                    <button class="btn btn-function" onclick="quickCalc('PI')">π</button>
+                    <button class="btn btn-function" onclick="quickCalc('E')">e</button>
+                    <button class="btn btn-function" onclick="quickCalc('RAND')">Rand</button>
+                    <button class="btn btn-function" onclick="quickCalc('FACT')">n!</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Глобальні змінні
+        let currentMode = 'standard';
+        let currentInput = '0';
+        let history = [];
+        let memory = 0;
+        
+        // Курси валют (приблизні)
+        const rates = {
+            USD: { EUR: 0.92, UAH: 41.5, GBP: 0.79, PLN: 4.0, USD: 1 },
+            EUR: { USD: 1.09, UAH: 45.2, GBP: 0.86, PLN: 4.35, EUR: 1 },
+            UAH: { USD: 0.024, EUR: 0.022, GBP: 0.019, PLN: 0.096, UAH: 1 },
+            GBP: { USD: 1.27, EUR: 1.16, UAH: 52.5, PLN: 5.05, GBP: 1 },
+            PLN: { USD: 0.25, EUR: 0.23, UAH: 10.4, GBP: 0.20, PLN: 1 }
+        };
+
+        // Ініціалізація частинок
+        function initParticles() {
+            const container = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 20 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                container.appendChild(particle);
+            }
+        }
+
+        // Перемикання режимів
+        function switchMode(mode) {
+            currentMode = mode;
+            
+            // Оновлення вкладок
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Оновлення секцій
+            document.querySelectorAll('.calc-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(mode).classList.add('active');
+            
+            currentInput = '0';
+            updateDisplay();
+        }
+
+        // Оновлення дисплея
+        function updateDisplay() {
+            const displays = {
+                standard: 'stdDisplay',
+                scientific: 'sciDisplay',
+                programmer: 'progDisplay'
+            };
+            
+            if (displays[currentMode]) {
+                document.getElementById(displays[currentMode]).textContent = currentInput;
+            }
+            
+            // Оновлення програмістських значень
+            if (currentMode === 'programmer') {
+                try {
+                    const val = parseInt(currentInput) || 0;
+                    document.getElementById('hexVal').textContent = val.toString(16).toUpperCase();
+                    document.getElementById('decVal').textContent = val.toString(10);
+                    document.getElementById('octVal').textContent = val.toString(8);
+                    document.getElementById('binVal').textContent = val.toString(2);
+                } catch(e) {}
+            }
+        }
+
+        // Вставка числа
+        function insertNumber(num) {
+            if (currentInput === '0' && num !== '.') {
+                currentInput = num;
+            } else {
+                currentInput += num;
+            }
+            updateDisplay();
+        }
+
+        // Вставка оператора
+        function insertOperator(op) {
+            currentInput += ' ' + op + ' ';
+            updateDisplay();
+        }
+
+        // Вставка функції
+        function insertFunction(func) {
+            currentInput = func + '(' + (currentInput === '0' ? '' : currentInput) + ')';
+            updateDisplay();
+        }
+
+        // Очищення
+        function clearAll() {
+            currentInput = '0';
+            updateDisplay();
+        }
+
+        // Видалення останнього символу
+        function deleteLast() {
+            currentInput = currentInput.slice(0, -1) || '0';
+            updateDisplay();
+        }
+
+        // Обчислення
+        function calculate() {
+            try {
+                let expr = currentInput
+                    .replace(/×/g, '*')
+                    .replace(/÷/g, '/')
+                    .replace(/−/g, '-')
+                    .replace(/sin/g, 'Math.sin')
+                    .replace(/cos/g, 'Math.cos')
+                    .replace(/tan/g, 'Math.tan')
+                    .replace(/log/g, 'Math.log10')
+                    .replace(/ln/g, 'Math.log')
+                    .replace(/sqrt/g, 'Math.sqrt')
+                    .replace(/pow/g, 'Math.pow');
+                
+                // Програмістські операції
+                expr = expr.replace(/>>/g, '>>').replace(/<</g, '<<');
+                
+                const result = eval(expr);
+                
+                if (!isFinite(result) || isNaN(result)) {
+                    throw new Error('Invalid result');
+                }
+                
+                // Додавання до історії
+                addToHistory(currentInput, result);
+                
+                currentInput = result.toString();
+                updateDisplay();
+                
+                // Малювання графіка для наукового режиму
+                if (currentMode === 'scientific' && expr.includes('Math.sin') || expr.includes('Math.cos')) {
+                    drawGraph(expr);
+                }
+                
+            } catch (e) {
+                currentInput = 'Помилка';
+                updateDisplay();
+                setTimeout(() => {
+                    currentInput = '0';
+                    updateDisplay();
+                }, 1500);
+            }
+        }
+
+        // Додавання до історії
+        function addToHistory(expr, result) {
+            const item = { expr, result, time: new Date().toLocaleTimeString() };
+            history.unshift(item);
+            if (history.length > 10) history.pop();
+            renderHistory();
+        }
+
+        // Відображення історії
+        function renderHistory() {
+            const list = document.getElementById('historyList');
+            if (history.length === 0) {
+                list.innerHTML = '<div style="color: var(--text-secondary); text-align: center; padding: 2rem;">Історія порожня</div>';
+                return;
+            }
+            
+            list.innerHTML = history.map(item => `
+                <div class="history-item" onclick="loadFromHistory('${item.expr}')">
+                    <div class="history-expr">${item.expr} =</div>
+                    <div class="history-result">${item.result}</div>
+                </div>
+            `).join('');
+        }
+
+        // Завантаження з історії
+        function loadFromHistory(expr) {
+            currentInput = expr;
+            updateDisplay();
+        }
+
+        // Очищення історії
+        function clearHistory() {
+            history = [];
+            renderHistory();
+        }
+
+        // Конвертер валют
+        function convertCurrency() {
+            const from = document.getElementById('fromCurrency').value;
+            const to = document.getElementById('toCurrency').value;
+            const amount = parseFloat(document.getElementById('fromAmount').value) || 0;
+            
+            const rate = rates[from][to];
+            const result = (amount * rate).toFixed(2);
+            
+            document.getElementById('toAmount').value = result;
+        }
+
+        function swapCurrency() {
+            const from = document.getElementById('fromCurrency');
+            const to = document.getElementById('toCurrency');
+            const temp = from.value;
+            from.value = to.value;
+            to.value = temp;
+            convertCurrency();
+        }
+
+        // Швидкі обчислення
+        function quickCalc(type) {
+            let val = parseFloat(currentInput) || 0;
+            let result;
+            
+            switch(type) {
+                case 'PI': result = Math.PI; break;
+                case 'E': result = Math.E; break;
+                case 'RAND': result = Math.random(); break;
+                case 'FACT': 
+                    result = 1;
+                    for(let i = 2; i <= val; i++) result *= i;
+                    break;
+            }
+            
+            currentInput = result.toString();
+            updateDisplay();
+        }
+
+        // Теми
+        const themes = {
+            cyber: {
+                bgPrimary: '#0f0f23',
+                bgSecondary: '#1a1a2e',
+                accentCyan: '#00d4ff',
+                accentPurple: '#9d4edd'
+            },
+            sunset: {
+                bgPrimary: '#1a1a2e',
+                bgSecondary: '#2d3436',
+                accentCyan: '#ff6b6b',
+                accentPurple: '#feca57'
+            },
+            forest: {
+                bgPrimary: '#0c2e2e',
+                bgSecondary: '#1a3a3a',
+                accentCyan: '#1dd1a1',
+                accentPurple: '#10ac84'
+            },
+            ocean: {
+                bgPrimary: '#001f3f',
+                bgSecondary: '#003366',
+                accentCyan: '#48dbfb',
+                accentPurple: '#0abde3'
+            },
+            midnight: {
+                bgPrimary: '#1a1a2e',
+                bgSecondary: '#2c3e50',
+                accentCyan: '#74b9ff',
+                accentPurple: '#a29bfe'
+            },
+            candy: {
+                bgPrimary: '#2d1b2e',
+                bgSecondary: '#3d2c3e',
+                accentCyan: '#ff9ff3',
+                accentPurple: '#f368e0'
+            }
+        };
+
+        function setTheme(themeName) {
+            const theme = themes[themeName];
+            const root = document.documentElement;
+            
+            root.style.setProperty('--bg-primary', theme.bgPrimary);
+            root.style.setProperty('--bg-secondary', theme.bgSecondary);
+            root.style.setProperty('--accent-cyan', theme.accentCyan);
+            root.style.setProperty('--accent-purple', theme.accentPurple);
+            
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+
+        // Малювання графіка
+        function drawGraph(expr) {
+            const canvas = document.getElementById('functionGraph');
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.offsetWidth;
+            canvas.height = canvas.offsetHeight;
+            
+            const w = canvas.width;
+            const h = canvas.height;
+            const scale = 50;
+            
+            ctx.clearRect(0, 0, w, h);
+            ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent-cyan');
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            for (let x = 0; x < w; x++) {
+                const xVal = (x - w/2) / scale;
+                const yVal = Math.sin(xVal); // Спрощено для демонстрації
+                const y = h/2 - yVal * scale;
+                
+                if (x === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            
+            // Сітка
+            ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(w/2, 0);
+            ctx.lineTo(w/2, h);
+            ctx.moveTo(0, h/2);
+            ctx.lineTo(w, h/2);
+            ctx.stroke();
+        }
+
+        // Клавіатура
+        document.addEventListener('keydown', (e) => {
+            if (currentMode === 'currency') return;
+            
+            const key = e.key;
+            if (/[0-9.]/.test(key)) insertNumber(key);
+            if (['+', '-', '*', '/', '%'].includes(key)) insertOperator(key);
+            if (key === 'Enter') calculate();
+            if (key === 'Escape') clearAll();
+            if (key === 'Backspace') deleteLast();
+        });
+
+        // Ініціалізація
+        initParticles();
+        updateDisplay();
+    </script>
+</body>
+</html>
